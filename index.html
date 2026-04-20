@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#1D9E75"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="ARP Citoyen"/>
+  <title>ARP Citoyen</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <link rel="icon" type="image/png" href="icon-192.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    :root{
+      --cp:#1D9E75;--cpl:#E1F5EE;--cpd:#085041;
+      --ca:#D85A30;--cal:#FAECE7;
+      --cs:#ffffff;--cbg:#f5f5f3;
+      --ct:#1a1a1a;--cm:#6b6b6b;--cbr:#e0e0dc;
+      --r:16px;--rs:10px;
+    }
+    @media(prefers-color-scheme:dark){
+      :root{--cs:#1c1c1e;--cbg:#000000;--ct:#f0f0f0;--cm:#8e8e93;--cbr:#2c2c2e;}
+    }
+    html,body{height:100%;background:var(--cbg);color:var(--ct);font-family:'Outfit',sans-serif;overflow-x:hidden}
+    .screen{display:none;flex-direction:column;min-height:100vh;min-height:100dvh;padding:1.25rem;padding-bottom:calc(1.25rem + env(safe-area-inset-bottom))}
+    .screen.active{display:flex}
+    .serif{font-family:'DM Serif Display',serif}
+    .card{background:var(--cs);border-radius:var(--r);border:.5px solid var(--cbr);padding:1.25rem;margin-bottom:.75rem}
+    .card-title{font-size:11px;font-weight:500;color:var(--cm);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.7px}
+    .btn{width:100%;padding:15px;border-radius:var(--rs);font-size:15px;font-weight:500;font-family:'Outfit',sans-serif;cursor:pointer;border:none;transition:transform .1s,opacity .15s;margin-bottom:.5rem}
+    .btn:active{transform:scale(.97)}
+    .btn-primary{background:var(--cp);color:#fff}
+    .btn-secondary{background:var(--cpl);color:var(--cpd)}
+    .btn-accent{background:var(--ca);color:#fff}
+    .btn-ghost{background:transparent;border:.5px solid var(--cbr);color:var(--ct)}
+    .btn:disabled{opacity:.35;pointer-events:none}
+    .input{width:100%;padding:13px 14px;border-radius:var(--rs);border:.5px solid var(--cbr);background:var(--cs);font-size:16px;font-family:'Outfit',sans-serif;color:var(--ct);outline:none;-webkit-appearance:none}
+    .input:focus{border-color:var(--cp)}
+    .back{background:none;border:none;color:var(--cm);font-size:14px;cursor:pointer;text-align:left;padding:0;font-family:'Outfit',sans-serif;margin-bottom:1rem}
+    .spacer{flex:1}
+    .gap{height:1rem}.gap-sm{height:.5rem}.gap-lg{height:1.5rem}
+    .tag{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--cpl);color:var(--cpd);font-weight:500;display:inline-block}
+    .alert{padding:12px 14px;border-radius:var(--rs);font-size:14px;line-height:1.5;margin-bottom:.75rem}
+    .alert-info{background:var(--cpl);color:var(--cpd)}
+    .alert-warn{background:#FAEEDA;color:#633806}
+    .alert-err{background:#FCEBEB;color:#A32D2D}
+    .theme-chip{background:var(--cpl);color:var(--cpd);padding:10px 14px;border-radius:var(--rs);font-size:14px;font-weight:500}
+    .kw{padding:6px 12px;border-radius:20px;font-size:13px;border:.5px solid var(--cbr);color:var(--cm)}
+    .keyword-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:.5rem}
+    .avatar{width:36px;height:36px;border-radius:50%;background:var(--cpl);color:var(--cpd);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+    .role-pick{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--rs);border:.5px solid var(--cbr);background:var(--cs);margin-bottom:.5rem;cursor:pointer;transition:border-color .15s,background .15s}
+    .role-pick:active{background:var(--cpl)}
+    .role-pick.taken{opacity:.4;pointer-events:none}
+    .role-pick.mine{background:var(--cpl);border-color:var(--cp)}
+    .role-pick-left{display:flex;align-items:center;gap:10px}
+    .role-icon-big{font-size:22px;width:36px;text-align:center}
+    .role-pick-name{font-size:15px;font-weight:500}
+    .role-pick-sub{font-size:12px;color:var(--cm);margin-top:1px}
+    .role-pick-status{font-size:12px;font-weight:500}
+    .s-free{color:var(--cp)}.s-taken{color:var(--cm)}.s-mine{color:var(--cp)}
+    .progress-bar{height:6px;background:var(--cbr);border-radius:3px;overflow:hidden;margin:.5rem 0}
+    .progress-fill{height:100%;background:var(--cp);border-radius:3px;transition:width .5s}
+    .timer-big{position:relative;display:flex;align-items:center;justify-content:center;width:170px;height:170px;margin:0 auto}
+    svg.ring{transform:rotate(-90deg)}
+    .timer-text-big{position:absolute;font-family:'DM Serif Display',serif;font-size:42px}
+    .timer-sub-lbl{font-size:12px;color:var(--cm);text-align:center;margin-top:.25rem}
+    .reset-tap{width:100%;padding:20px;border-radius:var(--r);font-size:17px;font-weight:500;font-family:'Outfit',sans-serif;cursor:pointer;border:.5px solid var(--cp);background:var(--cpl);color:var(--cpd);text-align:center;transition:background .15s}
+    .reset-tap:active{background:#9FE1CB}
+    .hand-btn{width:100%;padding:22px;border-radius:var(--r);font-size:17px;font-weight:500;font-family:'Outfit',sans-serif;cursor:pointer;border:none;background:var(--cpl);color:var(--cpd);transition:all .2s}
+    .hand-btn.raised{background:var(--cp);color:#fff}
+    .hands-list{list-style:none}
+    .hands-list li{padding:10px 0;border-bottom:.5px solid var(--cbr);display:flex;align-items:center;gap:10px;font-size:14px}
+    .hands-list li:last-child{border-bottom:none}
+    .give-btn{margin-left:auto;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;background:var(--cp);color:#fff;border:none;cursor:pointer;font-family:'Outfit',sans-serif}
+    .role-summary-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--cbr);font-size:14px}
+    .role-summary-item:last-child{border-bottom:none}
+    .choice-btn{display:flex;align-items:center;justify-content:space-between;padding:15px;border-radius:var(--rs);background:var(--cs);border:.5px solid var(--cbr);font-size:15px;font-weight:500;font-family:'Outfit',sans-serif;color:var(--ct);cursor:pointer;width:100%;margin-bottom:.5rem}
+    .choice-btn:active{background:var(--cpl)}
+    .spinner{width:32px;height:32px;border:3px solid var(--cbr);border-top-color:var(--cp);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .pulse{animation:pulse 2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .connected-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:var(--cpl);color:var(--cpd);font-size:13px;margin:3px}
+    .dot-live{width:7px;height:7px;border-radius:50%;background:var(--cp);animation:pulse 1.5s infinite;flex-shrink:0}
+  </style>
+</head>
+<body>
+
+<!-- ACCUEIL -->
+<div id="s-home" class="screen active">
+  <div class="gap-lg"></div>
+  <div class="serif" style="font-size:30px;color:var(--cp)">ARP Citoyen</div>
+  <div style="font-size:11px;color:var(--cm);margin-top:4px;letter-spacing:.6px;text-transform:uppercase">Vivre ensemble en paix · 4ème</div>
+  <div class="gap-lg"></div>
+  <div class="card">
+    <div class="card-title">Je suis…</div>
+    <button class="choice-btn" onclick="go('s-teacher-setup')"><span>L'enseignant(e)</span><span style="color:var(--cm)">→</span></button>
+    <button class="choice-btn" onclick="go('s-student-join')" style="margin-bottom:0"><span>Un(e) élève</span><span style="color:var(--cm)">→</span></button>
+  </div>
+  <div class="spacer"></div>
+  <p style="font-size:12px;color:var(--cm);text-align:center">Atelier de Réflexion Partagée<br>Éducation civique · Collège</p>
+  <div class="gap"></div>
+</div>
+
+<!-- SETUP ENSEIGNANT -->
+<div id="s-teacher-setup" class="screen">
+  <div class="gap"></div>
+  <button class="back" onclick="go('s-home')">← Retour</button>
+  <div class="serif" style="font-size:24px">Nouvelle séance</div>
+  <div class="gap"></div>
+  <div class="card">
+    <div class="card-title">Thème de la séance</div>
+    <select class="input" id="theme-select">
+      <option value="0">Le respect de la différence</option>
+      <option value="1">Résoudre un conflit sans violence</option>
+      <option value="2">Les règles : pourquoi les respecter ?</option>
+      <option value="3">L'écoute de l'autre</option>
+      <option value="4">La solidarité en classe</option>
+      <option value="5">La liberté et ses limites</option>
+      <option value="6">Traiter tout le monde pareil : est-ce être juste ?</option>
+      <option value="7">Le vivre ensemble à l'école</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-title">Votre prénom ou nom</div>
+    <input class="input" id="teacher-name" placeholder="Ex : Mme Benali"/>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-primary" onclick="createSession()">Créer la séance →</button>
+  <div class="gap"></div>
+</div>
+
+<!-- CODE SÉANCE (ENSEIGNANT) -->
+<div id="s-teacher-code" class="screen">
+  <div class="gap"></div>
+  <div class="serif" style="font-size:24px">Code de séance</div>
+  <div class="gap-sm"></div>
+  <p style="font-size:14px;color:var(--cm)">Dictez ce code à vos élèves pour qu'ils rejoignent.</p>
+  <div class="gap"></div>
+  <div class="card" style="text-align:center;padding:2rem">
+    <div id="display-code" class="serif" style="font-size:64px;letter-spacing:12px;color:var(--cp)">----</div>
+    <div class="gap-sm"></div>
+    <div id="display-theme" class="tag"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rôles — en attente</div>
+    <div id="roles-status-teacher"></div>
+    <div class="gap-sm"></div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--cm)">
+      <div class="dot-live"></div>
+      <span id="connected-count-lbl">0 élève(s) connecté(s)</span>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-primary" id="start-btn" disabled onclick="startSession()">Lancer la séance →</button>
+  <div class="gap"></div>
+</div>
+
+<!-- REJOINDRE (ÉLÈVE) -->
+<div id="s-student-join" class="screen">
+  <div class="gap"></div>
+  <button class="back" onclick="go('s-home')">← Retour</button>
+  <div class="serif" style="font-size:24px">Rejoindre la séance</div>
+  <div class="gap"></div>
+  <div class="card">
+    <div class="card-title">Code de séance</div>
+    <input class="input" id="join-code" placeholder="Ex : 4827" maxlength="4" inputmode="numeric"/>
+  </div>
+  <div class="card">
+    <div class="card-title">Mon prénom</div>
+    <input class="input" id="student-name" placeholder="Ton prénom"/>
+  </div>
+  <div id="join-error" class="alert alert-err" style="display:none"></div>
+  <div class="spacer"></div>
+  <button class="btn btn-secondary" id="join-btn" onclick="joinSession()">Rejoindre →</button>
+  <div class="gap"></div>
+</div>
+
+<!-- CHOIX DU RÔLE (ÉLÈVE) -->
+<div id="s-role-pick" class="screen">
+  <div class="gap"></div>
+  <div class="serif" style="font-size:24px">Choisis ton rôle</div>
+  <div class="gap-sm"></div>
+  <p style="font-size:14px;color:var(--cm)">Premier arrivé, premier servi.</p>
+  <div class="gap"></div>
+  <div id="role-pick-list"></div>
+  <div class="spacer"></div>
+  <button class="btn btn-primary" id="confirm-role-btn" disabled onclick="confirmRole()">Confirmer →</button>
+  <div class="gap"></div>
+</div>
+
+<!-- RÉVÉLATION DU RÔLE -->
+<div id="s-role-reveal" class="screen">
+  <div class="gap"></div>
+  <div class="serif" style="font-size:24px">Ton rôle</div>
+  <div class="gap"></div>
+  <div class="card" style="text-align:center;padding:2rem">
+    <div id="role-icon" style="font-size:52px;margin-bottom:.75rem"></div>
+    <div id="role-name" class="serif" style="font-size:32px;margin-bottom:1rem"></div>
+    <div id="role-guide" class="alert alert-info" style="text-align:left;font-size:14px"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Thème du jour</div>
+    <div id="role-theme" class="theme-chip"></div>
+  </div>
+  <div id="wait-start-msg" class="alert alert-warn" style="display:none">
+    En attente du lancement par l'enseignant(e)…
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-primary" id="go-role-btn" onclick="goToRoleView()" disabled>En attente…</button>
+  <div class="gap"></div>
+</div>
+
+<!-- ANIMATEUR -->
+<div id="s-animateur" class="screen">
+  <div class="gap"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div><div class="serif" style="font-size:20px">Animateur</div><div id="anim-theme-lbl" style="font-size:12px;color:var(--cm);margin-top:2px"></div></div>
+    <div id="anim-session-time" class="serif" style="font-size:18px;color:var(--cp)">0:00</div>
+  </div>
+  <div class="gap"></div>
+  <div class="card">
+    <div class="card-title">Progression · 45 min</div>
+    <div class="progress-bar"><div class="progress-fill" id="anim-progress" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--cm)">
+      <span id="anim-elapsed">0 min</span><span>45 min</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Mains levées</div>
+    <ul class="hands-list" id="hands-anim"><li style="color:var(--cm);font-style:italic;font-size:14px">Aucune main levée</li></ul>
+  </div>
+  <div class="card">
+    <p style="font-size:14px;color:var(--ct)">Ouvrez la discussion, recentrez si nécessaire, synthétisez en fin de séance.</p>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-accent" onclick="endSession()">Clôturer la séance</button>
+  <div class="gap"></div>
+</div>
+
+<!-- PARTICIPANT -->
+<div id="s-participant" class="screen">
+  <div class="gap"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="serif" style="font-size:20px">Participant</div>
+    <div id="part-session-time" class="serif" style="font-size:18px;color:var(--cp)">0:00</div>
+  </div>
+  <div class="gap"></div>
+  <div class="card">
+    <div class="card-title">Thème du jour</div>
+    <div id="part-theme" class="theme-chip"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Pour t'aider à réfléchir</div>
+    <div class="keyword-grid" id="part-keywords"></div>
+  </div>
+  <div class="gap"></div>
+  <button class="hand-btn" id="hand-btn" onclick="toggleHand()">✋ Lever la main pour parler</button>
+  <div class="gap-sm"></div>
+  <div class="card"><p style="font-size:14px;color:var(--cm)">Écoute les autres. Chaque intervention : 2 min max.</p></div>
+  <div class="spacer"></div><div class="gap"></div>
+</div>
+
+<!-- SECRÉTAIRE -->
+<div id="s-secretaire" class="screen">
+  <div class="gap"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="serif" style="font-size:20px">Secrétaire</div>
+    <div id="sec-session-time" class="serif" style="font-size:18px;color:var(--cp)">0:00</div>
+  </div>
+  <div class="gap"></div>
+  <div class="alert alert-info">Prends note sur papier des idées importantes. Tu restitueras à la fin.</div>
+  <div class="card"><div class="card-title">Thème</div><div id="sec-theme" class="theme-chip"></div></div>
+  <div class="card">
+    <div class="card-title">À noter</div>
+    <ul style="font-size:14px;color:var(--ct);padding-left:1.25rem;line-height:2.2">
+      <li>Les idées principales exprimées</li>
+      <li>Les points d'accord</li>
+      <li>Les désaccords (avec respect)</li>
+      <li>Une phrase résumant la séance</li>
+    </ul>
+  </div>
+  <div class="spacer"></div><div class="gap"></div>
+</div>
+
+<!-- GARDIEN DU TEMPS -->
+<div id="s-temps" class="screen">
+  <div class="gap"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="serif" style="font-size:20px">Gardien du temps</div>
+    <div id="temps-session-time" class="serif" style="font-size:18px;color:var(--cp)">0:00</div>
+  </div>
+  <div class="gap"></div>
+  <div class="card" style="text-align:center;padding:1.75rem">
+    <div class="card-title">Temps par intervention</div>
+    <div class="timer-big">
+      <svg class="ring" width="170" height="170" viewBox="0 0 170 170">
+        <circle cx="85" cy="85" r="75" fill="none" stroke="var(--cbr)" stroke-width="8"/>
+        <circle cx="85" cy="85" r="75" fill="none" stroke="var(--cp)" stroke-width="8"
+          stroke-dasharray="471.2" stroke-dashoffset="0" stroke-linecap="round" id="itv-circle"/>
+      </svg>
+      <div class="timer-text-big" id="itv-display">2:00</div>
+    </div>
+    <div class="timer-sub-lbl" id="itv-status">Prêt</div>
+  </div>
+  <div class="gap"></div>
+  <button class="reset-tap" id="reset-tap-btn" onclick="startOrResetTimer()">▶ Démarrer / Remettre à zéro</button>
+  <div class="gap"></div>
+  <div class="card"><p style="font-size:14px;color:var(--cm)">Appuie dès qu'un élève commence. Réappuie quand il a fini pour remettre à zéro. Laisse chacun terminer sa phrase.</p></div>
+  <div class="spacer"></div><div class="gap"></div>
+</div>
+
+<!-- DONNEUR DE PAROLE -->
+<div id="s-parole" class="screen">
+  <div class="gap"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="serif" style="font-size:20px">Donneur de parole</div>
+    <div id="parole-session-time" class="serif" style="font-size:18px;color:var(--cp)">0:00</div>
+  </div>
+  <div class="gap"></div>
+  <div class="alert alert-info">Tu choisis qui parle parmi ceux qui lèvent la main. Veille à ce que tout le monde intervienne.</div>
+  <div class="card">
+    <div class="card-title">Mains levées</div>
+    <ul class="hands-list" id="hands-parole"><li style="color:var(--cm);font-style:italic;font-size:14px">Aucune main levée</li></ul>
+  </div>
+  <div class="spacer"></div><div class="gap"></div>
+</div>
+
+<!-- OBSERVATEUR -->
+<div id="s-observateur" class="screen">
+  <div class="gap"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="serif" style="font-size:20px">Observateur</div>
+    <div id="obs-session-time" class="serif" style="font-size:18px;color:var(--cp)">0:00</div>
+  </div>
+  <div class="gap"></div>
+  <div class="alert alert-info">Observe sans intervenir. Tu partageras ton retour bienveillant à la fin.</div>
+  <div class="card">
+    <div class="card-title">Ce que tu observes</div>
+    <ul style="font-size:14px;color:var(--ct);padding-left:1.25rem;line-height:2.2">
+      <li>Chacun écoute-t-il vraiment ?</li>
+      <li>La parole est-elle respectée ?</li>
+      <li>Le langage est-il respectueux ?</li>
+      <li>Tout le monde peut-il s'exprimer ?</li>
+    </ul>
+  </div>
+  <div class="card"><div class="card-title">Thème observé</div><div id="obs-theme" class="theme-chip"></div></div>
+  <div class="spacer"></div><div class="gap"></div>
+</div>
+
+<!-- FIN DE SÉANCE -->
+<div id="s-end" class="screen">
+  <div class="gap-lg"></div>
+  <div style="width:72px;height:72px;border-radius:50%;background:var(--cpl);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:34px">✓</div>
+  <div class="serif" style="font-size:28px;text-align:center">Séance terminée</div>
+  <div class="gap-sm"></div>
+  <p style="font-size:14px;color:var(--cm);text-align:center">Merci à tous pour votre participation.</p>
+  <div class="gap-lg"></div>
+  <div class="card">
+    <div class="card-title">Rôles de la séance</div>
+    <div id="end-roles-list"></div>
+  </div>
+  <div class="card"><div class="card-title">Thème abordé</div><div id="end-theme" class="theme-chip"></div></div>
+  <div class="spacer"></div>
+  <button class="btn btn-ghost" onclick="newSession()">Nouvelle séance</button>
+  <div class="gap"></div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, off, remove }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAkv7Z4kuHdXs1HR2wUoCiSZZWHaOuxkqA",
+  authDomain: "arp-citoyen.firebaseapp.com",
+  databaseURL: "https://arp-citoyen-default-rtdb.firebaseio.com",
+  projectId: "arp-citoyen",
+  storageBucket: "arp-citoyen.firebasestorage.app",
+  messagingSenderId: "341751590537",
+  appId: "1:341751590537:web:4560486ad94c60b5ff6058"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* ── DONNÉES ─────────────────────────────────────────── */
+const THEMES = [
+  {name:"Le respect de la différence",keywords:["tolérance","accueil","préjugé","singularité","diversité","regard sur l'autre"]},
+  {name:"Résoudre un conflit sans violence",keywords:["dialogue","compromis","médiation","colère","écoute","solution"]},
+  {name:"Les règles : pourquoi les respecter ?",keywords:["loi","liberté","protection","sanction","contrat social","droits"]},
+  {name:"L'écoute de l'autre",keywords:["silence","empathie","patience","compréhension","point de vue","respect"]},
+  {name:"La solidarité en classe",keywords:["entraide","collectif","faiblesse","force","partage","lien social"]},
+  {name:"La liberté et ses limites",keywords:["responsabilité","autrui","interdit","droit","opinion","conséquence"]},
+  {name:"Traiter tout le monde pareil : est-ce être juste ?",keywords:["équité","égalité","besoin","justice","différence","adaptation"]},
+  {name:"Le vivre ensemble à l'école",keywords:["coopération","confiance","règlement","communauté","respect mutuel","appartenance"]}
+];
+
+const ROLES = [
+  {id:'secretaire',name:'Secrétaire',icon:'📝',guide:'Note les idées clés sur papier. À la fin, tu restitueras un résumé à la classe.',screen:'s-secretaire',desc:'Note les idées clés'},
+  {id:'temps',name:'Gardien du temps',icon:'⏱',guide:'Veille à ce que chaque intervention ne dépasse pas 2 minutes. Laisse chacun finir sa phrase avant de signaler.',screen:'s-temps',desc:'Chronomètre les interventions'},
+  {id:'parole',name:'Donneur de parole',icon:'🎤',guide:'Tu choisis qui parle parmi ceux qui lèvent la main. Donne la parole équitablement.',screen:'s-parole',desc:'Gère qui prend la parole'},
+  {id:'observateur',name:'Observateur',icon:'👁',guide:'Observe la qualité des échanges sans intervenir. Tu partageras ton retour à la fin.',screen:'s-observateur',desc:'Observe et fait un retour final'},
+  {id:'participant',name:'Participant',icon:'💬',guide:'Réfléchis au thème. Lève la main pour demander la parole. Écoute activement les autres.',screen:'s-participant',desc:'Participe à la discussion'},
+];
+
+/* ── ÉTAT LOCAL ──────────────────────────────────────── */
+let S = {
+  code:null, theme:null, myName:'', isTeacher:false,
+  myRole:null, myPickedRole:null,
+  sessionSec:0, sessionInterval:null,
+  itvSec:120, itvInterval:null, itvRunning:false,
+  listeners:[], handRaised:false,
+};
+
+/* ── NAVIGATION ──────────────────────────────────────── */
+window.go = id => {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+};
+const fmt = s => Math.floor(s/60)+':'+(s%60).toString().padStart(2,'0');
+
+/* ── ENSEIGNANT : CRÉER SÉANCE ───────────────────────── */
+window.createSession = async () => {
+  const name = document.getElementById('teacher-name').value.trim() || 'Enseignant(e)';
+  const ti = parseInt(document.getElementById('theme-select').value);
+  S.theme = THEMES[ti];
+  S.myName = name;
+  S.isTeacher = true;
+  S.code = String(Math.floor(1000 + Math.random() * 9000));
+
+  await set(ref(db, `sessions/${S.code}`), {
+    theme: ti,
+    status: 'waiting',
+    createdAt: Date.now(),
+    participants: { [sanitize(name)]: { name, role:'animateur', isTeacher:true } },
+    takenRoles: { animateur: name },
+    hands: {},
+  });
+
+  document.getElementById('display-code').textContent = S.code;
+  document.getElementById('display-theme').textContent = S.theme.name;
+  listenSession();
+  go('s-teacher-code');
+};
+
+/* ── ENSEIGNANT : LANCER ─────────────────────────────── */
+window.startSession = async () => {
+  await update(ref(db, `sessions/${S.code}`), { status:'active', startedAt: Date.now() });
+};
+
+/* ── ÉLÈVE : REJOINDRE ───────────────────────────────── */
+window.joinSession = async () => {
+  const code = document.getElementById('join-code').value.trim();
+  const name = document.getElementById('student-name').value.trim();
+  const errEl = document.getElementById('join-error');
+  errEl.style.display = 'none';
+  if (!code || !name) { errEl.textContent = 'Remplis les deux champs.'; errEl.style.display='block'; return; }
+
+  const snap = await get(ref(db, `sessions/${code}`));
+  if (!snap.exists()) { errEl.textContent = 'Code introuvable. Vérifie auprès de ton enseignant(e).'; errEl.style.display='block'; return; }
+
+  const data = snap.val();
+  if (data.status === 'ended') { errEl.textContent = 'Cette séance est terminée.'; errEl.style.display='block'; return; }
+
+  S.code = code;
+  S.myName = name;
+  S.theme = THEMES[data.theme];
+  S.isTeacher = false;
+
+  await set(ref(db, `sessions/${code}/participants/${sanitize(name)}`),
+    { name, role: null, isTeacher: false });
+
+  listenSession();
+  renderRolePickList(data.takenRoles || {});
+  go('s-role-pick');
+};
+
+/* ── ÉLÈVE : CHOISIR RÔLE ────────────────────────────── */
+window.pickRole = async (id) => {
+  const snap = await get(ref(db, `sessions/${S.code}/takenRoles`));
+  const taken = snap.val() || {};
+  if (taken[id] && taken[id] !== S.myName) return;
+  if (S.myPickedRole && S.myPickedRole !== id) {
+    await remove(ref(db, `sessions/${S.code}/takenRoles/${S.myPickedRole}`));
+  }
+  S.myPickedRole = id;
+  await set(ref(db, `sessions/${S.code}/takenRoles/${id}`), S.myName);
+};
+
+window.confirmRole = async () => {
+  if (!S.myPickedRole) return;
+  S.myRole = ROLES.find(r => r.id === S.myPickedRole);
+  await update(ref(db, `sessions/${S.code}/participants/${sanitize(S.myName)}`),
+    { role: S.myPickedRole });
+  showRoleReveal();
+};
+
+/* ── RÉVÉLATION DU RÔLE ──────────────────────────────── */
+function showRoleReveal() {
+  const r = S.myRole;
+  document.getElementById('role-icon').textContent = r.icon;
+  document.getElementById('role-name').textContent = r.name;
+  document.getElementById('role-guide').textContent = r.guide;
+  document.getElementById('role-theme').textContent = S.theme ? S.theme.name : '—';
+  const goBtn = document.getElementById('go-role-btn');
+  const waitMsg = document.getElementById('wait-start-msg');
+  if (S.isTeacher) {
+    goBtn.disabled = false;
+    goBtn.textContent = 'C\'est parti →';
+    waitMsg.style.display = 'none';
+  } else {
+    goBtn.disabled = true;
+    goBtn.textContent = 'En attente du lancement…';
+    waitMsg.style.display = 'block';
+  }
+  go('s-role-reveal');
+}
+
+window.goToRoleView = () => {
+  const r = S.myRole;
+  if (r.id==='participant') {
+    document.getElementById('part-theme').textContent = S.theme?.name||'—';
+    document.getElementById('part-keywords').innerHTML =
+      (S.theme?.keywords||[]).map(k=>`<span class="kw">${k}</span>`).join('');
+  }
+  if (r.id==='secretaire') document.getElementById('sec-theme').textContent = S.theme?.name||'—';
+  if (r.id==='observateur') document.getElementById('obs-theme').textContent = S.theme?.name||'—';
+  if (r.id==='animateur') document.getElementById('anim-theme-lbl').textContent = S.theme?.name||'—';
+  go(r.screen);
+};
+
+/* ── LISTENER PRINCIPAL (FIREBASE) ───────────────────── */
+function listenSession() {
+  const sessionRef = ref(db, `sessions/${S.code}`);
+  const unsub = onValue(sessionRef, snap => {
+    if (!snap.exists()) return;
+    const data = snap.val();
+
+    // Mise à jour rôles (enseignant)
+    if (S.isTeacher && document.getElementById('s-teacher-code').classList.contains('active')) {
+      renderRolesStatusTeacher(data.takenRoles||{}, data.participants||{});
+    }
+
+    // Mise à jour liste rôles dispo (élève en train de choisir)
+    if (!S.isTeacher && document.getElementById('s-role-pick').classList.contains('active')) {
+      renderRolePickList(data.takenRoles||{});
+    }
+
+    // Mains levées
+    renderHands(data.hands||{});
+
+    // Démarrage séance → débloquer élèves
+    if (data.status === 'active' && !S.sessionInterval) {
+      startSessionTimer(data.startedAt);
+      if (!S.isTeacher && document.getElementById('s-role-reveal').classList.contains('active')) {
+        const goBtn = document.getElementById('go-role-btn');
+        const waitMsg = document.getElementById('wait-start-msg');
+        goBtn.disabled = false;
+        goBtn.textContent = 'C\'est parti →';
+        waitMsg.style.display = 'none';
+      }
+    }
+
+    // Fin de séance
+    if (data.status === 'ended') {
+      clearInterval(S.sessionInterval);
+      buildEndScreen(data);
+      go('s-end');
+    }
+  });
+  S.listeners.push(() => off(sessionRef));
+}
+
+/* ── RENDU RÔLES (ENSEIGNANT) ────────────────────────── */
+function renderRolesStatusTeacher(takenRoles, participants) {
+  const el = document.getElementById('roles-status-teacher');
+  if (!el) return;
+  let h = '';
+  ROLES.forEach(r => {
+    const who = takenRoles[r.id];
+    h += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:.5px solid var(--cbr);font-size:14px">
+      <span>${r.icon} ${r.name}</span>
+      <span style="font-size:12px;color:${who?'var(--cp)':'var(--cm)'}">${who||'Libre'}</span>
+    </div>`;
+  });
+  el.innerHTML = h;
+
+  const students = Object.values(participants).filter(p=>!p.isTeacher);
+  document.getElementById('connected-count-lbl').textContent = `${students.length} élève(s) connecté(s)`;
+  const sb = document.getElementById('start-btn');
+  sb.disabled = students.length === 0;
+}
+
+/* ── RENDU RÔLES (ÉLÈVE) ─────────────────────────────── */
+function renderRolePickList(takenRoles) {
+  const el = document.getElementById('role-pick-list');
+  if (!el) return;
+  let h = '';
+  ROLES.forEach(r => {
+    const takenBy = takenRoles[r.id];
+    const isMine = S.myPickedRole === r.id;
+    const isTaken = takenBy && takenBy !== S.myName;
+    h += `<div class="role-pick${isTaken?' taken':''}${isMine?' mine':''}" onclick="pickRole('${r.id}')">
+      <div class="role-pick-left">
+        <div class="role-icon-big">${r.icon}</div>
+        <div>
+          <div class="role-pick-name">${r.name}</div>
+          <div class="role-pick-sub">${r.desc}</div>
+        </div>
+      </div>
+      <div class="role-pick-status ${isMine?'s-mine':isTaken?'s-taken':'s-free'}">
+        ${isMine?'✓ Choisi':isTaken?(takenBy||'Pris'):'Libre'}
+      </div>
+    </div>`;
+  });
+  el.innerHTML = h;
+  const btn = document.getElementById('confirm-role-btn');
+  if (btn) btn.disabled = !S.myPickedRole;
+}
+
+/* ── MAINS LEVÉES ────────────────────────────────────── */
+function renderHands(hands) {
+  const raised = Object.entries(hands).filter(([,v])=>v===true).map(([k])=>k);
+  ['hands-anim','hands-parole'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (raised.length === 0) {
+      el.innerHTML = '<li style="color:var(--cm);font-style:italic;font-size:14px">Aucune main levée</li>';
+      return;
+    }
+    el.innerHTML = raised.map(name =>
+      `<li><div class="avatar">${name.charAt(0).toUpperCase()}</div>
+      <span>${name}</span>
+      <button class="give-btn" onclick="giveWord('${name}')">Donner la parole</button></li>`
+    ).join('');
+  });
+}
+
+window.toggleHand = async () => {
+  S.handRaised = !S.handRaised;
+  const btn = document.getElementById('hand-btn');
+  if (S.handRaised) {
+    btn.classList.add('raised');
+    btn.textContent = '✋ Main levée — en attente de la parole';
+    await set(ref(db, `sessions/${S.code}/hands/${sanitize(S.myName)}`), true);
+  } else {
+    btn.classList.remove('raised');
+    btn.textContent = '✋ Lever la main pour parler';
+    await remove(ref(db, `sessions/${S.code}/hands/${sanitize(S.myName)}`));
+  }
+};
+
+window.giveWord = async (name) => {
+  await remove(ref(db, `sessions/${S.code}/hands/${sanitize(name)}`));
+};
+
+/* ── TIMER SÉANCE ────────────────────────────────────── */
+function startSessionTimer(startedAt) {
+  clearInterval(S.sessionInterval);
+  S.sessionInterval = setInterval(() => {
+    S.sessionSec = Math.floor((Date.now() - startedAt) / 1000);
+    const f = fmt(S.sessionSec);
+    ['anim','part','sec','temps','parole','obs'].forEach(id => {
+      const el = document.getElementById(id+'-session-time');
+      if (el) el.textContent = f;
+    });
+    const pct = Math.min((S.sessionSec/2700)*100, 100);
+    const p = document.getElementById('anim-progress'); if(p) p.style.width = pct+'%';
+    const ae = document.getElementById('anim-elapsed'); if(ae) ae.textContent = Math.floor(S.sessionSec/60)+' min';
+  }, 1000);
+}
+
+/* ── TIMER INTERVENTION ──────────────────────────────── */
+window.startOrResetTimer = () => {
+  if (!S.itvRunning) {
+    S.itvSec = 120; S.itvRunning = true;
+    updateItvDisplay();
+    document.getElementById('reset-tap-btn').textContent = '⏹ Arrêter / Remettre à zéro';
+    S.itvInterval = setInterval(() => {
+      S.itvSec--;
+      updateItvDisplay();
+      if (S.itvSec <= 0) {
+        clearInterval(S.itvInterval); S.itvRunning = false;
+        const d = document.getElementById('itv-display');
+        if(d){d.textContent='⏰';d.style.color='var(--ca)';}
+        const st = document.getElementById('itv-status'); if(st) st.textContent='Temps écoulé !';
+        document.getElementById('reset-tap-btn').textContent = '↺ Remettre à zéro';
+      }
+    }, 1000);
+  } else {
+    clearInterval(S.itvInterval); S.itvRunning = false;
+    S.itvSec = 120; updateItvDisplay();
+    const d = document.getElementById('itv-display'); if(d) d.style.color='var(--ct)';
+    const st = document.getElementById('itv-status'); if(st) st.textContent='Prêt';
+    document.getElementById('reset-tap-btn').textContent = '▶ Démarrer / Remettre à zéro';
+  }
+};
+
+function updateItvDisplay() {
+  const d = document.getElementById('itv-display');
+  const c = document.getElementById('itv-circle');
+  const st = document.getElementById('itv-status');
+  if(d) d.textContent = fmt(S.itvSec);
+  if(c) {
+    c.style.strokeDashoffset = 471.2*(1-S.itvSec/120);
+    c.style.stroke = S.itvSec<=20?'var(--ca)':'var(--cp)';
+  }
+  if(st) st.textContent = S.itvRunning ? (S.itvSec<=20?'Presque terminé…':'En cours…') : 'Prêt';
+}
+
+/* ── FIN DE SÉANCE ───────────────────────────────────── */
+window.endSession = async () => {
+  clearInterval(S.sessionInterval);
+  const snap = await get(ref(db, `sessions/${S.code}`));
+  const data = snap.val();
+  await update(ref(db, `sessions/${S.code}`), { status:'ended' });
+  buildEndScreen(data);
+  go('s-end');
+};
+
+function buildEndScreen(data) {
+  const el = document.getElementById('end-roles-list');
+  const et = document.getElementById('end-theme');
+  if(et) et.textContent = THEMES[data.theme]?.name||'—';
+  const parts = Object.values(data.participants||{});
+  if(el) el.innerHTML = parts.map(p => {
+    const r = p.isTeacher ? {icon:'🎓',name:'Animateur'} : (ROLES.find(r=>r.id===p.role)||{icon:'💬',name:'Participant'});
+    return `<div class="role-summary-item"><span>${p.name}</span><span style="font-size:13px;color:var(--cm)">${r.icon} ${r.name}</span></div>`;
+  }).join('');
+}
+
+window.newSession = () => {
+  S.listeners.forEach(u=>u());
+  S.listeners = [];
+  clearInterval(S.sessionInterval);
+  clearInterval(S.itvInterval);
+  S = { code:null,theme:null,myName:'',isTeacher:false,myRole:null,myPickedRole:null,
+        sessionSec:0,sessionInterval:null,itvSec:120,itvInterval:null,itvRunning:false,
+        listeners:[],handRaised:false };
+  go('s-home');
+};
+
+/* ── UTILS ───────────────────────────────────────────── */
+function sanitize(name) {
+  return name.replace(/[.#$[\]/]/g,'_').substring(0,30);
+}
+
+/* ── ENSEIGNANT : ROLE REVEAL ────────────────────────── */
+window.startSession = async () => {
+  S.myRole = {id:'animateur',name:'Animateur',icon:'🎓',
+    guide:'Ouvrez la discussion, orientez les échanges, synthétisez à la fin.',screen:'s-animateur'};
+  const now = Date.now();
+  await update(ref(db,`sessions/${S.code}`), {status:'active', startedAt:now});
+  showRoleReveal();
+};
+
+</script>
+
+<!-- Service Worker registration -->
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+
+</body>
+</html>
