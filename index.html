@@ -684,7 +684,13 @@ window.dismissParole = async () => {
 function listenSpeaking() {
   const speakRef = ref(db, `sessions/${S.code}/speakingNow`);
   onValue(speakRef, snap => {
-    if (!S.isTeacher && snap.exists() && snap.val() === S.myName) {
+    if (!snap.exists()) return;
+    const speakingName = snap.val().trim().toLowerCase();
+    const myName = S.myName.trim().toLowerCase();
+    const myRoleId = S.myRole ? S.myRole.id : null;
+    const isReceiver = speakingName === myName;
+    const isGiver = myRoleId === 'parole' || myRoleId === 'animateur' || S.isTeacher;
+    if (isReceiver && !isGiver) {
       document.getElementById('parole-banner').classList.add('visible');
       S.handRaised = false;
       const btn = document.getElementById('hand-btn');
