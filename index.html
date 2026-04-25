@@ -87,6 +87,12 @@
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
     .connected-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:var(--cpl);color:var(--cpd);font-size:13px;margin:3px}
     .dot-live{width:7px;height:7px;border-radius:50%;background:var(--cp);animation:pulse 1.5s infinite;flex-shrink:0}
+    .parole-banner{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--cp);flex-direction:column;align-items:center;justify-content:center;z-index:999;animation:fadeIn .3s ease}
+    .parole-banner.visible{display:flex}
+    @keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    .parole-banner-text{font-family:'DM Serif Display',serif;font-size:36px;color:#fff;text-align:center;padding:0 2rem}
+    .parole-banner-sub{font-size:15px;color:rgba(255,255,255,.75);margin-top:1rem;text-align:center}
+    .parole-banner-dismiss{margin-top:2.5rem;padding:12px 28px;border-radius:30px;background:rgba(255,255,255,.2);border:.5px solid rgba(255,255,255,.4);color:#fff;font-size:15px;font-family:'Outfit',sans-serif;cursor:pointer}
   </style>
 </head>
 <body>
@@ -214,6 +220,13 @@
   <div class="spacer"></div>
   <button class="btn btn-primary" id="go-role-btn" onclick="goToRoleView()" disabled>En attente…</button>
   <div class="gap"></div>
+</div>
+
+<!-- BANDEAU TU AS LA PAROLE -->
+<div class="parole-banner" id="parole-banner">
+  <div class="parole-banner-text">Tu as la parole.</div>
+  <div class="parole-banner-sub">Exprime-toi avec respect · 2 min max</div>
+  <button class="parole-banner-dismiss" onclick="dismissParole()">OK, j'ai compris</button>
 </div>
 
 <!-- ANIMATEUR -->
@@ -478,6 +491,7 @@ window.joinSession = async () => {
     { name, role: null, isTeacher: false });
 
   listenSession();
+  listenSpeaking();
   renderRolePickList(data.takenRoles || {});
   go('s-role-pick');
 };
@@ -659,7 +673,25 @@ window.toggleHand = async () => {
 
 window.giveWord = async (name) => {
   await remove(ref(db, `sessions/${S.code}/hands/${sanitize(name)}`));
+  await set(ref(db, `sessions/${S.code}/speakingNow`), name);
 };
+
+window.dismissParole = async () => {
+  document.getElementById('parole-banner').classList.remove('visible');
+  await remove(ref(db, `sessions/${S.code}/speakingNow`));
+};
+
+function listenSpeaking() {
+  const speakRef = ref(db, `sessions/${S.code}/speakingNow`);
+  onValue(speakRef, snap => {
+    if (!S.isTeacher && snap.exists() && snap.val() === S.myName) {
+      document.getElementById('parole-banner').classList.add('visible');
+      S.handRaised = false;
+      const btn = document.getElementById('hand-btn');
+      if (btn) { btn.classList.remove('raised'); btn.textContent = '✋ Lever la main pour parler'; }
+    }
+  });
+}
 
 /* ── TIMER SÉANCE ────────────────────────────────────── */
 function startSessionTimer(startedAt) {
